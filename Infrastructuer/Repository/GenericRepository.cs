@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructuer.Repository
 {
-    public class GenericRepository<T> : IGenericRepository<T> where T : class
+    public class GenericRepository<T> : IGenericRepository<T> where T : class, IEntity
     {
         private readonly HotelDbContext context;
 
@@ -27,18 +27,34 @@ namespace Infrastructuer.Repository
             return context.Set<T>().Include(include).Where(where).ToList();
         }
 
-        public List<T> GetAll(string? include = null)
+        public List<T> GetAll(string[] includes = null)
         {
-            if (include == null)
+            IQueryable<T> query = context.Set<T>();
+
+            if (includes != null)
             {
-                return context.Set<T>().ToList();
+                foreach (var include in includes)
+                {
+                    query = query.Include(include);
+                }
             }
-            return context.Set<T>().Include(include).ToList();
+
+            return query.ToList();
         }
 
-        public T GetById(int? id)
+        public T GetById(int? Id, string[] includes = null)
         {
-            return context.Set<T>().Find(id);
+            IQueryable<T> query = context.Set<T>();
+
+            if (includes != null)
+            {
+                foreach (var include in includes)
+                {
+                    query = query.Include(include);
+                }
+            }
+
+            return query.First(e => e.Id == Id);
         }
 
         public List<T> GetRange(Func<T, bool> where, int take, string? include = null)

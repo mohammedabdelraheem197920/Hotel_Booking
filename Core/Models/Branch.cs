@@ -1,10 +1,11 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using Core.RepositoryInterfaces;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Core.Models
 {
-    public class Branch
+    public class Branch : IEntity
     {
-        public int ID { get; set; }
+        public int Id { get; set; }
         public string Country { get; set; }
         public string State { get; set; }
         public string City { get; set; }

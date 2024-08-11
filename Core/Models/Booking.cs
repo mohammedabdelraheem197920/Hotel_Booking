@@ -1,8 +1,9 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using Core.RepositoryInterfaces;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Core.Models
 {
-    public class Booking
+    public class Booking : IEntity
     {
         public int Id { get; set; }
         public DateTime CheckInDate { get; set; }
@@ -10,6 +11,12 @@ namespace Core.Models
         public int NumberOfRooms { get; set; }
         public bool DiscountApplied { get; set; }
         public DateTime BookingDate { get; set; }
+
+        [Column(TypeName = "decimal(18, 2)")]
+        public decimal Discount { get; set; }
+
+
+
         public List<Room> Rooms { get; set; } = new List<Room>();
 
 

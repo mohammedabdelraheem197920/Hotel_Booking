@@ -1,9 +1,10 @@
 ﻿using Core.Enums;
+using Core.RepositoryInterfaces;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Core.Models
 {
-    public class Room
+    public class Room : IEntity
     {
         public int Id { get; set; }
         public RoomType Type { get; set; } = RoomType.Single;
@@ -14,12 +15,12 @@ namespace Core.Models
 
 
         [ForeignKey("Booking")]
-        public int BookingId { get; set; }
+        public int? BookingId { get; set; }
         public Booking Booking { get; set; }
 
 
         [ForeignKey("Branch")]
-        public int BranchID { get; set; }
+        public int? BranchID { get; set; }
         public Branch Branch { get; set; }
 
     }

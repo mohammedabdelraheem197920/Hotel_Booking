@@ -9,11 +9,11 @@ namespace Infrastructuer.Configration
         public void Configure(EntityTypeBuilder<Hotel> builder)
         {
             builder.HasData(
-                new Hotel { ID = 1, Name = "Hotel A" },
-                new Hotel { ID = 2, Name = "Hotel B" },
-                new Hotel { ID = 3, Name = "Hotel C" },
-                new Hotel { ID = 4, Name = "Hotel D" },
-                new Hotel { ID = 5, Name = "Hotel E" }
+                new Hotel { Id = 1, Name = "Hotel A" },
+                new Hotel { Id = 2, Name = "Hotel B" },
+                new Hotel { Id = 3, Name = "Hotel C" },
+                new Hotel { Id = 4, Name = "Hotel D" },
+                new Hotel { Id = 5, Name = "Hotel E" }
             );
         }
 
