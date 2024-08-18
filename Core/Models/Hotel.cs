@@ -7,6 +7,6 @@ namespace Core.Models
         public int Id { get; set; }
         public string Name { get; set; }
 
-        List<Branch> Branches { get; set; } = new List<Branch>();
+        public List<Branch> Branches { get; set; }
     }
 }

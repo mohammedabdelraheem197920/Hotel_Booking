@@ -5,12 +5,10 @@ using Core.Models;
 using Core.RepositoryInterfaces;
 using Infrastructuer.Context;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
-
 namespace Api.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/[controller]/[action]")]
     [ApiController]
     public class BookingController : ControllerBase
     {
@@ -52,7 +50,19 @@ namespace Api.Controllers
         [HttpGet]
         public ActionResult GetAll()
         {
-            List<Booking> bookings = bookingRepository.GetAll().ToList();
+            var userId = GetLoggedInUserId();
+            if (userId == null)
+            {
+                return Unauthorized("User is not logged in.");
+            }
+
+            var user = bookingRepository.GetUserById(userId);
+            if (user == null)
+            {
+                return BadRequest($"No Customer Found with this ID : ({userId})");
+            }
+            string[] includes = { "Rooms" };
+            List<Booking> bookings = bookingRepository.GetAll(userId, includes).ToList();
             List<BookingForGetDto> getBookingDTOs = mapper.Map<List<BookingForGetDto>>(bookings);
             return Ok(getBookingDTOs);
         }
@@ -74,6 +84,10 @@ namespace Api.Controllers
             }
 
         }
+
+
+
+
 
 
         [HttpPost]
@@ -113,8 +127,11 @@ namespace Api.Controllers
 
             // Get all rooms for the branch
             List<Room> allBranchRooms = roomRepository.GetAll()
-                                              .Where(r => r.BranchID == bookingForPostDto.BranchID)
-                                              .ToList();
+                                                      .Where(r => r.BranchID == bookingForPostDto.BranchID)
+                                                      .ToList();
+
+            //context.Entry(allBranchRooms).State = EntityState.Detached;
+
 
             // Check if enough rooms are available
             if (allBranchRooms.Count < bookingForPostDto.NumberOfRooms)
@@ -124,8 +141,8 @@ namespace Api.Controllers
 
             // Find available rooms
             List<Room> availableBranchRooms = allBranchRooms
-                                              .Where(r => r.Booking == null || r.Booking.CheckOutDate < DateTime.Now)
-                                              .ToList();
+                .Where(r => !r.IsBooked || (r.Booking != null && r.Booking.CheckOutDate < DateTime.Now))
+                .ToList();
 
             if (availableBranchRooms.Count == 0)
             {
@@ -162,54 +179,54 @@ namespace Api.Controllers
             {
                 booking.DiscountApplied = true;
                 booking.Discount = 0.05m;
+                user.isOldClient = true;
+                userRepository.Save();
             }
 
-            // Add and save the booking
+
+            // Assign rooms to the booking
+            List<Room> wantedRooms = new List<Room>();
+            foreach (var roomDto in bookingForPostDto.Rooms)
+            {
+                Room wantedRoom = availableBranchRooms.FirstOrDefault(r => r.Type == roomDto.Type);
+                if (wantedRoom != null)
+                {
+                    //// Ensure room is not tracked already
+                    //var trackedRoom = context.ChangeTracker.Entries<Room>().FirstOrDefault(e => e.Entity.Id == room.Id);
+                    //if (trackedRoom != null)
+                    //{
+                    //    context.Entry(trackedRoom.Entity).State = EntityState.Detached;
+                    //}
+
+                    // Update room status
+                    wantedRoom.IsBooked = true;
+                    //     wantedRoom.Id = roomDto.Id;
+                    wantedRoom.NumberOfChildren = roomDto.NumberOfChilds;
+                    wantedRoom.NumberOfAdults = roomDto.NumberOfAdults;
+                    // wantedRoom.BookingId = booking.Id;
+
+                    // Attach and update the room entity
+                    //context.Rooms.Attach(room);
+                    //context.Entry(room).State = EntityState.Modified;
+                    wantedRooms.Add(wantedRoom);
+                    //  bookingForPostDto.Rooms=mapper.Map<RoomForPostDto>(wantedRooms);
+                    availableBranchRooms.Remove(wantedRoom);
+
+                }
+            }
+            booking.Rooms = wantedRooms;
+            booking.UserId = userId;
+            roomRepository.Save();
             bookingRepository.Insert(booking);
             bookingRepository.Save();
 
-            // Assign rooms to the booking
-            List<Room> bookedRooms = new List<Room>();
-            foreach (var roomDto in bookingForPostDto.Rooms)
-            {
-                Room room = availableBranchRooms.FirstOrDefault(r => r.Type == roomDto.Type);
-                if (room != null)
-                {
-                    room.IsBooked = true;
-                    room.BookingId = booking.Id;
-                    room.NumberOfChildren = roomDto.NumberOfChilds;
-                    room.NumberOfAdults = roomDto.NumberOfAdults;
+            // Add and save the booking
+            //bookingRepository.Insert(booking);
 
-                    // If room is already being tracked, update its state
-                    if (context.Entry(room).State == EntityState.Detached)
-                    {
-                        context.Attach(room);
-                    }
-                    else
-                    {
-                        context.Update(room);
-                    }
+            // context.SaveChanges();
 
-                    bookedRooms.Add(room);
-                    availableBranchRooms.Remove(room);
-                }
-            }
-
-            roomRepository.Save();
-
-            // Map booked rooms to DTO
-            List<RoomForGetDto> roomForGetDTOs = bookedRooms.Select(room => mapper.Map<RoomForGetDto>(room)).ToList();
-
-            // Return the response
-            return Ok(new
-            {
-                Message = $"({bookedRooms.Count}) Rooms Booked Successfully by customer with ID ({bookingForPostDto.userID}) in Branch with ID ({bookingForPostDto.BranchID}).",
-                Data = roomForGetDTOs
-            });
+            return Ok(booking);
         }
-
-
-
 
 
     }

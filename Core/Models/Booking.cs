@@ -1,9 +1,8 @@
-﻿using Core.RepositoryInterfaces;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Core.Models
 {
-    public class Booking : IEntity
+    public class Booking
     {
         public int Id { get; set; }
         public DateTime CheckInDate { get; set; }
@@ -17,7 +16,7 @@ namespace Core.Models
 
 
 
-        public List<Room> Rooms { get; set; } = new List<Room>();
+        public List<Room> Rooms { get; set; } /*= new List<Room>();*/
 
 
         [ForeignKey("Branch")]

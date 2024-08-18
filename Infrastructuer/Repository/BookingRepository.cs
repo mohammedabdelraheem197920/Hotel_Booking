@@ -29,9 +29,9 @@ namespace Infrastructuer.Repository
             return context.Bookings.Include(include).Where(where).ToList();
         }
 
-        public List<Booking> GetAll(string[] includes = null)
+        public List<Booking> GetAll(string userId, string[] includes = null)
         {
-            IQueryable<Booking> query = context.Bookings;
+            IQueryable<Booking> query = context.Bookings.Where(b => b.UserId == userId);
 
             if (includes != null)
             {
@@ -64,14 +64,14 @@ namespace Infrastructuer.Repository
         //    return context.Users.SingleOrDefault(u => u.Id == userId);
         //}
 
-        public List<Booking> GetRange(Func<Booking, bool> where, int take, string? include = null)
-        {
-            if (include == null)
-            {
-                return context.Bookings.Where(where).Take(take).ToList();
-            }
-            return context.Bookings.Include(include).Where(where).Take(take).ToList();
-        }
+        //public List<Booking> GetRange(Func<Booking, bool> where, int take, string? include = null)
+        //{
+        //    if (include == null)
+        //    {
+        //        return context.Bookings.Where(where).Take(take).ToList();
+        //    }
+        //    return context.Bookings.Include(include).Where(where).Take(take).ToList();
+        //}
 
         public void Insert(Booking item)
         {

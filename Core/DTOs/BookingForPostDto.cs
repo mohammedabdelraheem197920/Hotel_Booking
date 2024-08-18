@@ -9,7 +9,7 @@ namespace Core.DTOs
         [Required]
         public DateTime CheckOut { get; set; } = DateTime.Now;
 
-        public string? userID { get; set; }
+        // public string? userID { get; set; }
 
         [Required]
         [Range(1, maximum: 20, ErrorMessage = "Rooms Must be bigger than Zero and smaller than 20")]

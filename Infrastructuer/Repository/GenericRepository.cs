@@ -57,14 +57,14 @@ namespace Infrastructuer.Repository
             return query.First(e => e.Id == Id);
         }
 
-        public List<T> GetRange(Func<T, bool> where, int take, string? include = null)
-        {
-            if (include == null)
-            {
-                return context.Set<T>().Where(where).Take(take).ToList();
-            }
-            return context.Set<T>().Include(include).Where(where).Take(take).ToList();
-        }
+        //public List<T> GetRange(Func<T, bool> where, int take, string? include = null)
+        //{
+        //    if (include == null)
+        //    {
+        //        return context.Set<T>().Where(where).Take(take).ToList();
+        //    }
+        //    return context.Set<T>().Include(include).Where(where).Take(take).ToList();
+        //}
 
         public void Insert(T item)
         {

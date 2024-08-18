@@ -16,7 +16,7 @@ namespace Core.Models
 
         [ForeignKey("Booking")]
         public int? BookingId { get; set; }
-        public Booking Booking { get; set; }
+        public Booking? Booking { get; set; }
 
 
         [ForeignKey("Branch")]

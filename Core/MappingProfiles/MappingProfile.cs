@@ -9,7 +9,9 @@ namespace Application.MappingProfiles
     {
         public MappingProfile()
         {
-            CreateMap<Hotel, HotelForGetDto>().ReverseMap();
+            CreateMap<Hotel, HotelForGetDto>()
+           .ForMember(dest => dest.noOfBranches, opt => opt.MapFrom(src => src.Branches != null ? src.Branches.Count : 0))
+           .ReverseMap();
 
 
             CreateMap<Branch, BranchForGetDto>()
@@ -18,8 +20,7 @@ namespace Application.MappingProfiles
                 .ReverseMap();
 
             CreateMap<Booking, BookingForGetDto>()
-                .ForMember(dest => dest.BranchID, opt => opt.MapFrom(src => src.Branch.Id))
-                .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.User.Id))
+                .ForMember(dest => dest.numberOfRooms, opt => opt.MapFrom(src => src.Rooms.Count))
                 .ReverseMap();
 
             CreateMap<User, RegisterUserDto>().ReverseMap();
@@ -27,6 +28,7 @@ namespace Application.MappingProfiles
 
 
             CreateMap<RoomForPostDto, Room>().ReverseMap();
+            CreateMap<Room, RoomForPostDto>().ReverseMap();
 
 
             CreateMap<BookingForPostDto, Booking>().ReverseMap();

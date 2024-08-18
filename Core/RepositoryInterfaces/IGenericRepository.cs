@@ -7,7 +7,7 @@
         T GetById(int? id, string[] includes = null);
 
         List<T> Get(Func<T, bool> where, string? include = null);
-        public List<T> GetRange(Func<T, bool> where, int take, string? include = null);
+        //public List<T> GetRange(Func<T, bool> where, int take, string? include = null);
 
         void Insert(T item);
 

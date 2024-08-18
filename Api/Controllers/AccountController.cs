@@ -11,7 +11,7 @@ using System.Text;
 
 namespace Api.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/[controller]/[action]")]
     [ApiController]
     public class AccountController : ControllerBase
     {
@@ -57,42 +57,41 @@ namespace Api.Controllers
         {
             if (ModelState.IsValid)
             {
-                User? userDb = await userManager.FindByNameAsync(userDto.UserName);
+                User userDb = await userManager.FindByNameAsync(userDto.UserName);
                 if (userDb != null)
                 {
                     bool found = await userManager.CheckPasswordAsync(userDb, userDto.Password);
                     if (found)
                     {
-                        List<Claim> myclaims = new List<Claim>();
-                        myclaims.Add(new Claim(ClaimTypes.Name, userDb.UserName));
-                        myclaims.Add(new Claim(ClaimTypes.NameIdentifier, userDb.Id));
-                        myclaims.Add(new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()));
-                        //Claims Role
+                        List<Claim> myclaims = new List<Claim>
+                        {
+                            new Claim(ClaimTypes.Name, userDb.UserName),
+                            new Claim(ClaimTypes.NameIdentifier, userDb.Id),
+                            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+                        };
+
                         var roles = await userManager.GetRolesAsync(userDb);
                         foreach (var role in roles)
                         {
                             myclaims.Add(new Claim(ClaimTypes.Role, role));
                         }
 
-                        var SignKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Jwt:Key"]));
+                        var signKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Jwt:Key"]));
+                        var signingCredentials = new SigningCredentials(signKey, SecurityAlgorithms.HmacSha256);
 
-                        SigningCredentials signingCredentials = new SigningCredentials(SignKey, SecurityAlgorithms.HmacSha256);
-
-
-                        //create token
                         JwtSecurityToken myToken = new JwtSecurityToken(
                             issuer: configuration["Jwt:Issuer"],
                             audience: configuration["Jwt:Audience"],
                             expires: DateTime.Now.AddDays(30),
                             claims: myclaims,
                             signingCredentials: signingCredentials
-                            );
+                        );
 
-                        //return token
                         return Ok(new
                         {
                             token = new JwtSecurityTokenHandler().WriteToken(myToken),
-                            expired = myToken.ValidTo
+                            expired = myToken.ValidTo,
+                            customerId = userDb.Id // Assuming userDb.Id is the unique identifier for the user
                         });
                     }
                 }
