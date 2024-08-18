@@ -47,9 +47,9 @@ namespace wepApp.Controllers
                         HttpContext.Session.SetString("Token", responseData.Token);
                         HttpContext.Session.SetString("TokenExpires", responseData.Expired.ToString());
 
-                        if (responseData.CustomerID.HasValue)
+                        if (responseData.CustomerID != null)
                         {
-                            HttpContext.Session.SetString("CustomerID", responseData.CustomerID.Value.ToString());
+                            HttpContext.Session.SetString("CustomerID", responseData.CustomerID.ToString());
                         }
 
                         return RedirectToAction("LoginSuccess");
@@ -86,7 +86,7 @@ namespace wepApp.Controllers
         {
             public string Token { get; set; }
             public DateTime Expired { get; set; }
-            public int? CustomerID { get; set; }
+            public string? CustomerID { get; set; }
         }
     }
 }

@@ -22,16 +22,30 @@ namespace wepApp.Controllers
         public async Task<IActionResult> GetAll()
         {
             List<BookingForGetDto> bookings = new List<BookingForGetDto>();
-            HttpResponseMessage response = await Client.GetAsync($"{Client.BaseAddress}/Hotel/GetAll");
+
+            var token = HttpContext.Session.GetString("Token");
+            if (string.IsNullOrEmpty(token))
+            {
+                return RedirectToAction("Login");
+            }
+
+            Client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+            HttpResponseMessage response = await Client.GetAsync($"{Client.BaseAddress}/Booking/GetAll");
+
             if (response.IsSuccessStatusCode)
             {
-                string data = response.Content.ReadAsStringAsync().Result;
+                string data = await response.Content.ReadAsStringAsync();
                 bookings = JsonConvert.DeserializeObject<List<BookingForGetDto>>(data);
+            }
+            else if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+            {
+                return RedirectToAction("Login");
             }
             else
             {
                 ModelState.AddModelError(string.Empty, "Server error. Please contact administrator.");
             }
+
             return View(bookings);
         }
 
@@ -64,21 +78,34 @@ namespace wepApp.Controllers
         {
             try
             {
+                var token = HttpContext.Session.GetString("Token");
+                if (string.IsNullOrEmpty(token))
+                {
+                    return RedirectToAction("Login");
+                }
+
+                Client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
                 string data = JsonConvert.SerializeObject(booking);
                 StringContent content = new StringContent(data, Encoding.UTF8, "application/json");
                 HttpResponseMessage httpResponse = await Client.PostAsync($"{Client.BaseAddress}/Booking/Add", content);
+
                 if (httpResponse.IsSuccessStatusCode)
                 {
                     return RedirectToAction("GetAll");
                 }
+                else if (httpResponse.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+                {
+                    return RedirectToAction("Login");
+                }
             }
             catch (Exception ex)
             {
-                return View(ex);
+                ModelState.AddModelError(string.Empty, $"Error occurred: {ex.Message}");
             }
-            return View();
 
-
+            return View(booking);
         }
+
     }
 }

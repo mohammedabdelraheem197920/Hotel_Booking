@@ -4,6 +4,7 @@ using Core.Enums;
 using Core.Models;
 using Core.RepositoryInterfaces;
 using Infrastructuer.Context;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 namespace Api.Controllers
@@ -47,6 +48,7 @@ namespace Api.Controllers
             return httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
         }
 
+        [Authorize]
         [HttpGet]
         public ActionResult GetAll()
         {
@@ -66,6 +68,7 @@ namespace Api.Controllers
             List<BookingForGetDto> getBookingDTOs = mapper.Map<List<BookingForGetDto>>(bookings);
             return Ok(getBookingDTOs);
         }
+
 
 
         [HttpGet("{id:int}")]
@@ -90,6 +93,7 @@ namespace Api.Controllers
 
 
 
+        [Authorize]
         [HttpPost]
         public IActionResult Add(BookingForPostDto bookingForPostDto)
         {
@@ -129,9 +133,6 @@ namespace Api.Controllers
             List<Room> allBranchRooms = roomRepository.GetAll()
                                                       .Where(r => r.BranchID == bookingForPostDto.BranchID)
                                                       .ToList();
-
-            //context.Entry(allBranchRooms).State = EntityState.Detached;
-
 
             // Check if enough rooms are available
             if (allBranchRooms.Count < bookingForPostDto.NumberOfRooms)
@@ -183,7 +184,6 @@ namespace Api.Controllers
                 userRepository.Save();
             }
 
-
             // Assign rooms to the booking
             List<Room> wantedRooms = new List<Room>();
             foreach (var roomDto in bookingForPostDto.Rooms)
@@ -191,27 +191,11 @@ namespace Api.Controllers
                 Room wantedRoom = availableBranchRooms.FirstOrDefault(r => r.Type == roomDto.Type);
                 if (wantedRoom != null)
                 {
-                    //// Ensure room is not tracked already
-                    //var trackedRoom = context.ChangeTracker.Entries<Room>().FirstOrDefault(e => e.Entity.Id == room.Id);
-                    //if (trackedRoom != null)
-                    //{
-                    //    context.Entry(trackedRoom.Entity).State = EntityState.Detached;
-                    //}
-
-                    // Update room status
                     wantedRoom.IsBooked = true;
-                    //     wantedRoom.Id = roomDto.Id;
                     wantedRoom.NumberOfChildren = roomDto.NumberOfChilds;
                     wantedRoom.NumberOfAdults = roomDto.NumberOfAdults;
-                    // wantedRoom.BookingId = booking.Id;
-
-                    // Attach and update the room entity
-                    //context.Rooms.Attach(room);
-                    //context.Entry(room).State = EntityState.Modified;
                     wantedRooms.Add(wantedRoom);
-                    //  bookingForPostDto.Rooms=mapper.Map<RoomForPostDto>(wantedRooms);
                     availableBranchRooms.Remove(wantedRoom);
-
                 }
             }
             booking.Rooms = wantedRooms;
@@ -219,11 +203,6 @@ namespace Api.Controllers
             roomRepository.Save();
             bookingRepository.Insert(booking);
             bookingRepository.Save();
-
-            // Add and save the booking
-            //bookingRepository.Insert(booking);
-
-            // context.SaveChanges();
 
             return Ok(booking);
         }
